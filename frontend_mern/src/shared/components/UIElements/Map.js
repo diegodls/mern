@@ -7,14 +7,14 @@ const Map = (props) => {
   const zoom = props.zoom;
 
   return (
-    <MapContainer center={[lat, lng]} zoom={13} scrollWheelZoom={false}>
+    <MapContainer center={[lat, lng]} zoom={zoom} scrollWheelZoom={true}>
       <TileLayer
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
       />
       <Marker position={[lat, lng]}>
         <Popup>
-          A pretty CSS3 popup. <br /> Easily customizable.
+          Coordenadas <br /> {lat} , {lng}
         </Popup>
       </Marker>
     </MapContainer>
