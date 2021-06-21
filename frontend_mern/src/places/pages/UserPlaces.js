@@ -2,6 +2,8 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import PlaceList from "../components/PlaceList";
 
+
+
 const UsersPlaces = (props) => {
   const DUMMY_PLACES = [
     {

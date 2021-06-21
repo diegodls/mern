@@ -1,40 +1,25 @@
-import React, { useCallback, useReducer } from "react";
-import "./NewPlaces.css";
+import React from "react";
+import "./PlaceForm.css";
 
 import Input from "../../shared/components/FormElements/Input";
 import Button from "../../shared/components/FormElements/Button";
+
+import { useForm } from "../../shared/hooks/form-hook";
+
 import {
   VALIDATOR_MINLENGTH,
   VALIDATOR_REQUIRE,
 } from "../../shared/util/validators";
 
-const formReducer = (state, action) => {
-  switch (action.type) {
-    case "INPUT_CHANGE":
-      let formIsValid = true;
-      for (const inputId in state.inputs) {
-        if (inputId === action.inputId) {
-          formIsValid = formIsValid && action.isValid;
-        } else {
-          formIsValid = formIsValid && state.inputs[inputId].isValid;
-        }
-      }
-      return {
-        ...state,
-        inputs: {
-          ...state.inputs,
-          [action.inputId]: { value: action.value, isValid: action.isValid },
-        },
-        isValid: formIsValid,
-      };
-    default:
-      return state;
-  }
-};
+import {
+  MESSAGE_MINDESCRIPTION,
+  MESSAGE_VALIDTITLE,
+  MESSAGE_VALIDADDRESS,
+} from "../../shared/util/messages";
 
 const NewPlaces = () => {
-  const [formState, dispatch] = useReducer(formReducer, {
-    inputs: {
+  const [formState, inputHandler] = useForm(
+    {
       title: {
         value: "",
         isValid: false,
@@ -43,18 +28,13 @@ const NewPlaces = () => {
         value: "",
         isValid: false,
       },
+      address: {
+        value: "",
+        isValid: false,
+      },
     },
-    isValid: false,
-  });
-
-  const inputHandler = useCallback((id, value, isValid) => {
-    dispatch({
-      type: "INPUT_CHANGE",
-      value: value,
-      isValid: isValid,
-      inputId: id,
-    });
-  }, []);
+    false
+  );
 
   const placeSubmitHandler = (event) => {
     event.preventDefault();
@@ -70,7 +50,7 @@ const NewPlaces = () => {
         type='text'
         label='Titulo'
         validators={[VALIDATOR_REQUIRE()]}
-        errorText='Digite um titulo valido.'
+        errorText={MESSAGE_VALIDTITLE}
         onInput={inputHandler}
       />
       <Input
@@ -78,7 +58,7 @@ const NewPlaces = () => {
         element='textarea'
         label='Descrição'
         validators={[VALIDATOR_REQUIRE(), VALIDATOR_MINLENGTH(5)]}
-        errorText='Digite uma descrição valida (minimo 5 caracteres).'
+        errorText={MESSAGE_MINDESCRIPTION}
         onInput={inputHandler}
       />
       <Input
@@ -86,7 +66,7 @@ const NewPlaces = () => {
         element='input'
         label='Endereço'
         validators={[VALIDATOR_REQUIRE()]}
-        errorText='Digite um endereço valida.'
+        errorText={MESSAGE_VALIDADDRESS}
         onInput={inputHandler}
       />
       <Button type='submit' disabled={!formState.isValid}>

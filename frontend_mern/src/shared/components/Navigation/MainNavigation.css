@@ -28,6 +28,7 @@
   
   .main-navigation__header-nav {
     display: none;
+    margin: 1rem;
   }
   
   .main-navigation__drawer-nav {
