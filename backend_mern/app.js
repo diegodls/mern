@@ -1,13 +1,12 @@
-const http = require("http");
+const express = require("express");
 const dotenv = require("dotenv");
+
+const placesRoutes = require("./routes/places-routes");
 
 dotenv.config();
 
-const server = http.createServer((req, res) => {
-  console.log("INICIANDO");
-  console.log(req.method, req.url);
+const app = express();
 
-  res.end("Sucesso!");
-});
+app.use("/api/places", placesRoutes);
 
-server.listen(process.env.PORT);
+app.listen(process.env.PORT);
