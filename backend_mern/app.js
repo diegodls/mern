@@ -1,13 +1,23 @@
 const express = require("express");
 const dotenv = require("dotenv");
 
+const HttpError = require("./models/http-error");
+
 const placesRoutes = require("./routes/places-routes");
 
 dotenv.config();
 
 const app = express();
 
+app.use(express.json());
+
 app.use("/api/places", placesRoutes);
+
+app.use((req, res, next) => {
+  const error = new HttpError("Pagina não disponível!", 400);
+  throw error;
+});
+
 app.use((error, req, res, next) => {
   if (res.headerSent) {
     return next(error);
