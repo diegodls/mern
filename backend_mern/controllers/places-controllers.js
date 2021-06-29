@@ -1,4 +1,6 @@
-const { uuid } = require("uuidv4");
+const { v4: uuidV4 } = require("uuid");
+const { validationResult } = require("express-validator");
+
 const HttpError = require("../models/http-error");
 
 let DUMMY_PLACES = [
@@ -31,30 +33,39 @@ const getPlaceById = (req, res, next) => {
   res.json({ place });
 };
 
-const getPlaceByUser = (req, res, next) => {
+const getPlacesByUserId = (req, res, next) => {
   const userId = req.params.uid;
 
-  const place = DUMMY_PLACES.find((p) => {
+  const places = DUMMY_PLACES.filter((p) => {
     return p.creator === userId;
   });
 
-  if (!place) {
+  if (!places || places.length === 0) {
     return next(
       new HttpError(
-        "Não foi possível encontrar um lugar com o ID de usuário informado.",
+        "Não foi possível encontrar um lugares com o ID de usuário informado.",
         404
       )
     );
   }
 
-  res.json({ place });
+  res.json({ places });
 };
 
 const createPlaces = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    throw new HttpError(
+      "Campos inválidos fornecidos, por favor corrija-os",
+      422
+    );
+  }
+
   const { title, description, coordinates, address, creator } = req.body;
 
   const createdPlace = {
-    id: uuid(),
+    id: uuidV4(),
     title,
     description,
     location: coordinates,
@@ -68,6 +79,15 @@ const createPlaces = (req, res, next) => {
 };
 
 const updatePlace = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    throw new HttpError(
+      "Campos inválidos fornecidos, por favor corrija-os",
+      422
+    );
+  }
+
   const { title, description } = req.body;
   const placeId = req.params.pid;
 
@@ -85,12 +105,16 @@ const updatePlace = (req, res, next) => {
 const deletePlace = (req, res, next) => {
   const placeId = req.params.pid;
 
+  if (!DUMMY_PLACES.find((p) => p.id === placeId)) {
+    throw new HttpError("Não foi encontrado o lugar com o ID solicitado.", 404);
+  }
+
   DUMMY_PLACES = DUMMY_PLACES.filter((p) => p.id !== placeId);
   res.status(200).json({ message: "Deletado com sucesso" });
 };
 
 exports.getPlaceById = getPlaceById;
-exports.getPlaceByUser = getPlaceByUser;
+exports.getPlacesByUserId = getPlacesByUserId;
 exports.createPlaces = createPlaces;
 exports.updatePlace = updatePlace;
 exports.deletePlace = deletePlace;
