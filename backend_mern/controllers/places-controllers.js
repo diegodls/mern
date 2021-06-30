@@ -3,6 +3,8 @@ const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
 
+const getCoordsForAddress = require("../util/location");
+
 let DUMMY_PLACES = [
   {
     id: "p1",
@@ -52,17 +54,24 @@ const getPlacesByUserId = (req, res, next) => {
   res.json({ places });
 };
 
-const createPlaces = (req, res, next) => {
+const createPlaces = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    throw new HttpError(
-      "Campos inválidos fornecidos, por favor corrija-os",
-      422
+    return next(
+      new HttpError("Campos inválidos fornecidos, por favor corrija-os", 422)
     );
   }
 
-  const { title, description, coordinates, address, creator } = req.body;
+  const { title, description, address, creator } = req.body;
+
+  let coordinates;
+
+  try {
+    coordinates = await getCoordsForAddress(address);
+  } catch (error) {
+    return next(error);
+  }
 
   const createdPlace = {
     id: uuidV4(),
