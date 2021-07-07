@@ -1,4 +1,5 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 
 const HttpError = require("./models/http-error");
@@ -28,4 +29,21 @@ app.use((error, req, res, next) => {
   res.json({ message: error.message || "Erro desconhecido!" });
 });
 
-app.listen(process.env.PORT);
+mongoose
+  .connect(
+    process.env.MONGO_URL,
+    {
+      user: process.env.MONGO_USER,
+      pass: process.env.MONGO_PASSWORD,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => {
+    app.listen(process.env.PORT);
+    console.log('Conectado ao mongodb com sucesso!');
+  })
+  .catch((err) => {
+    console.log("-----ERRO-----");
+    console.log(err);
+  });
