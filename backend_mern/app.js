@@ -31,17 +31,16 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    process.env.MONGO_URL,
-    {
-      user: process.env.MONGO_USER,
-      pass: process.env.MONGO_PASSWORD,
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+    process.env.MONGO_URL, {
+    user: process.env.MONGO_USER,
+    pass: process.env.MONGO_PASSWORD,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  })
   .then(() => {
     app.listen(process.env.PORT);
-    console.log('Conectado ao mongodb com sucesso!');
+    console.log("Conectado ao mongodb com sucesso!");
   })
   .catch((err) => {
     console.log("-----ERRO-----");
