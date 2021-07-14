@@ -1,39 +1,41 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 import UsersList from "../components/UsersList";
-const pages = () => {
-  const USERS = [
-    {
-      id: "u1",
-      name: "Teste",
-      image:
-        "https://st2.depositphotos.com/1009634/7235/v/600/depositphotos_72350117-stock-illustration-no-user-profile-picture-hand.jpg",
-      places: 3,
-    },
-    {
-      id: "u2",
-      name: "AAAAAAA",
-      image:
-        "https://st2.depositphotos.com/1009634/7235/v/600/depositphotos_72350117-stock-illustration-no-user-profile-picture-hand.jpg",
-      places: 1,
-    },
-    {
-      id: "u3",
-      name: "CCCCCC",
-      image:
-        "https://st2.depositphotos.com/1009634/7235/v/600/depositphotos_72350117-stock-illustration-no-user-profile-picture-hand.jpg",
-      places: 0,
-    },
-    {
-      id: "u4",
-      name: "BBBBB",
-      image:
-        "https://st2.depositphotos.com/1009634/7235/v/600/depositphotos_72350117-stock-illustration-no-user-profile-picture-hand.jpg",
-        places: 300
-    },
-  ];
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
-  return <UsersList items={USERS} />;
+const Users = () => {
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+
+  const [loadedUsers, setLoadedUsers] = useState();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const responseData = await sendRequest(
+          `${process.env.REACT_APP_API_URL}/users`
+        );
+
+        setLoadedUsers(responseData.users);
+      } catch (err) {}
+    };
+
+    fetchUsers();
+  }, [sendRequest]);
+
+  return (
+    <>
+      <ErrorModal error={error} onClear={clearError} />
+      {isLoading && (
+        <div className='center'>
+          <LoadingSpinner />
+        </div>
+      )}
+      {!isLoading && loadedUsers && <UsersList items={loadedUsers} />}
+    </>
+  );
 };
 
-export default pages;
+export default Users;

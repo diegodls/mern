@@ -21,14 +21,15 @@ import {
 } from "../../shared/util/messages";
 
 import { useForm } from "../../shared/hooks/form-hook";
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 import { AuthContext } from "../../shared/context/auth-context";
 
 const Auth = (props) => {
   const auth = useContext(AuthContext);
   const [isLoginMode, setIsLoginMode] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState();
+
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
 
   const [formState, inputHandler, setFormData] = useForm(
     {
@@ -45,45 +46,41 @@ const Auth = (props) => {
   );
 
   const authSubmitHandler = async (event) => {
-    console.log(`${process.env.REACT_APP_API_URL}/users/signup`);
     event.preventDefault();
 
     if (isLoginMode) {
-    } else {
       try {
-        setIsLoading(true);
-        const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/users/signup`,
+        await sendRequest(
+          `${process.env.REACT_APP_API_URL}/users/login`,
+          "POST",
+          JSON.stringify({
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: formState.inputs.name.value,
-              email: formState.inputs.email.value,
-              password: formState.inputs.password.value,
-            }),
+            "Content-Type": "application/json",
           }
         );
 
-        const responseData = await response.json();
-
-        if (!response.ok) {
-          throw new Error(responseData.message);
-        }
-
-        console.log(responseData);
-        setIsLoading(false);
         auth.login();
-      } catch (err) {
-        console.log(err);
-        setError(
-          err.message ||
-            "Aconteceu um erro, tente novamente novamente mais tarde!"
+      } catch (err) {}
+    } else {
+      try {
+        await sendRequest(
+          `${process.env.REACT_APP_API_URL}/users/signup`,
+          "POST",
+          JSON.stringify({
+            name: formState.inputs.name.value,
+            email: formState.inputs.email.value,
+            password: formState.inputs.password.value,
+          }),
+          {
+            "Content-Type": "application/json",
+          }
         );
-        setIsLoading(false);
-      }
+
+        auth.login();
+      } catch (err) {}
     }
   };
 
@@ -108,13 +105,11 @@ const Auth = (props) => {
     setIsLoginMode(!isLoginMode);
   };
 
-  const errorHandler = () => {
-    setError(null);
-  };
+  
 
   return (
     <React.Fragment>
-      <ErrorModal error={error} onClear={errorHandler} />
+      <ErrorModal error={error} onClear={clearError} />
       <Card className='authentication'>
         {isLoading && <LoadingSpinner asOverlay />}
         <h2>Login Necessário</h2>

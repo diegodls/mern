@@ -17,6 +17,7 @@ const getUsers = async (req, res, next) => {
 };
 
 const signup = async (req, res, next) => {
+  console.log('Cadastro');
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -68,15 +69,17 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
+  console.log('Logando');
   const { email, password } = req.body;
 
   let existingUser;
 
   try {
-    existingUser = await User.findOne({ email: email });
+    existingUser = await User.findOne({ email: email });  
+    console.log(existingUser);
   } catch (err) {
     error = new HttpError(
-      "Campos inválidos fornecidos, por favor corrija-os",
+      "Campos inválidos fornecidos, por favor corrija-os!",
       500
     );
     return next(error);
