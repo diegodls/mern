@@ -50,7 +50,7 @@ const Auth = (props) => {
 
     if (isLoginMode) {
       try {
-        await sendRequest(
+        const responseData = await sendRequest(
           `${process.env.REACT_APP_API_URL}/users/login`,
           "POST",
           JSON.stringify({
@@ -62,11 +62,11 @@ const Auth = (props) => {
           }
         );
 
-        auth.login();
+        auth.login(responseData.user.id);
       } catch (err) {}
     } else {
       try {
-        await sendRequest(
+        const responseData = await sendRequest(
           `${process.env.REACT_APP_API_URL}/users/signup`,
           "POST",
           JSON.stringify({
@@ -79,7 +79,7 @@ const Auth = (props) => {
           }
         );
 
-        auth.login();
+        auth.login(responseData.user.id);
       } catch (err) {}
     }
   };
@@ -104,8 +104,6 @@ const Auth = (props) => {
     }
     setIsLoginMode(!isLoginMode);
   };
-
-  
 
   return (
     <React.Fragment>

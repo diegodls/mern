@@ -17,7 +17,7 @@ const getUsers = async (req, res, next) => {
 };
 
 const signup = async (req, res, next) => {
-  console.log('Cadastro');
+  console.log("Cadastro");
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -69,13 +69,13 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-  console.log('Logando');
+  console.log("Logando");
   const { email, password } = req.body;
 
   let existingUser;
 
   try {
-    existingUser = await User.findOne({ email: email });  
+    existingUser = await User.findOne({ email: email });
     console.log(existingUser);
   } catch (err) {
     error = new HttpError(
@@ -92,7 +92,10 @@ const login = async (req, res, next) => {
     );
     return next(error);
   }
-  res.json({ message: "Logado com sucesso" });
+  res.json({
+    message: "Logado com sucesso",
+    user: existingUser.toObject({ getters: true }),
+  });
 };
 
 exports.getUsers = getUsers;

@@ -1,42 +1,43 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+
 import PlaceList from "../components/PlaceList";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
 
-
+import { useHttpClient } from "../../shared/hooks/http-hook";
 
 const UsersPlaces = (props) => {
-  const DUMMY_PLACES = [
-    {
-      id: "p1",
-      title: "Las Vegas",
-      description: "AAAAAAAAAAAAAAAAAAAAA",
-      imageUrl:
-        "https://upload.wikimedia.org/wikipedia/commons/3/3c/Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg",
-      address: "asçhdjkashkjdhasljhdasjkhdkljas",
-      location: {
-        lat: 36.13485205871512,
-        lng: -115.14431928958926,
-      },
-      creator: "u1",
-    },
-    {
-      id: "p2",
-      title: "México",
-      description: "Guadalajara",
-      imageUrl:
-        "https://media-cdn.tripadvisor.com/media/photo-s/10/65/41/12/place-stanislas.jpg",
-      address: "asçhdjkashkjdhasljhdasjkhdkljas",
-      location: {
-        lat: 20.660044596493982,
-        lng: -103.34850003359931,
-      },
-      creator: "u2",
-    },
-  ];
+  const { isLoading, error, sendRequest, clearError } = useHttpClient();
+
+  const [loadedPlaces, setLoadedPlaces] = useState();
 
   const userId = useParams().userId;
-  const loadedPlaces = DUMMY_PLACES.filter((place) => place.creator === userId);
-  return <PlaceList items={loadedPlaces} />;
+
+  useEffect(() => {
+    const fetchPlaces = async () => {
+      try {
+        const responseData = await sendRequest(
+          `${process.env.REACT_APP_API_URL}/places/user/${userId}`
+        );
+        setLoadedPlaces(responseData.places);
+      } catch (err) {}
+    };
+
+    fetchPlaces();
+  }, [sendRequest, userId]);
+
+  return (
+    <>
+      <ErrorModal error={error} onCLear={clearError} />
+      {isLoading && (
+        <div className='center'>
+          <LoadingSpinner asOverlay />
+        </div>
+      )}
+      {!isLoading && loadedPlaces && <PlaceList items={loadedPlaces} />}
+    </>
+  );
 };
 
 export default UsersPlaces;

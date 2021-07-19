@@ -1,12 +1,17 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useHistory } from "react-router-dom";
 import "./PlaceForm.css";
 
 import { useForm } from "../../shared/hooks/form-hook";
+import { useHttpClient } from "../../shared/hooks/http-hook";
+
+import { AuthContext } from "../../shared/context/auth-context";
 
 import Input from "../../shared/components/FormElements/Input";
 import Button from "../../shared/components/FormElements/Button";
 import Card from "../../shared/components/UIElements/Card";
+import LoadingSpinner from "../../shared/components/UIElements/LoadingSpinner";
+import ErrorModal from "../../shared/components/UIElements/ErrorModal";
 
 import {
   VALIDATOR_REQUIRE,
@@ -18,37 +23,11 @@ import {
   MESSAGE_VALIDTITLE,
 } from "../../shared/util/messages";
 
-const DUMMY_PLACES = [
-  {
-    id: "p1",
-    title: "Las Vegas",
-    description: "AAAAAAAAAAAAAAAAAAAAA",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/3/3c/Vue_de_nuit_de_la_Place_Stanislas_%C3%A0_Nancy.jpg",
-    address: "asçhdjkashkjdhasljhdasjkhdkljas",
-    location: {
-      lat: 36.13485205871512,
-      lng: -115.14431928958926,
-    },
-    creator: "u1",
-  },
-  {
-    id: "p2",
-    title: "México",
-    description: "Guadalajara",
-    imageUrl:
-      "https://media-cdn.tripadvisor.com/media/photo-s/10/65/41/12/place-stanislas.jpg",
-    address: "asçhdjkashkjdhasljhdasjkhdkljas",
-    location: {
-      lat: 20.660044596493982,
-      lng: -103.34850003359931,
-    },
-    creator: "u2",
-  },
-];
-
 const UpdatePlace = (props) => {
-  const [isLoading, setIsLoading] = useState(true);
+  const history = useHistory();
+  const auth = useContext(AuthContext);
+  const { sendRequest, isLoading, error, clearError } = useHttpClient();
+  const [loadedPlace, setLoadedPlace] = useState();
 
   const placeId = useParams().placeId;
 
@@ -66,33 +45,57 @@ const UpdatePlace = (props) => {
     false
   );
 
-  const identifiedPlace = DUMMY_PLACES.find((p) => p.id === placeId);
   useEffect(() => {
-    if (identifiedPlace) {
-      setFormData(
-        {
-          title: {
-            value: identifiedPlace.title,
-            isValid: true,
+    const fetchPlace = async () => {
+      try {
+        const responseData = await sendRequest(
+          `${process.env.REACT_APP_API_URL}/places/${placeId}`
+        );
+        setLoadedPlace(responseData.place);
+        setFormData(
+          {
+            title: {
+              value: responseData.place.title,
+              isValid: true,
+            },
+            description: {
+              value: responseData.place.description,
+              isValid: true,
+            },
           },
-          description: {
-            value: identifiedPlace.description,
-            isValid: true,
-          },
-        },
-        true
-      );
-    }
+          true
+        );
+      } catch (err) {}
+    };
+    fetchPlace();
+  }, [sendRequest, placeId, setFormData]);
 
-    setIsLoading(false);
-  }, [identifiedPlace, setFormData]);
-
-  const placeUpdateSubmitHandler = (event) => {
+  const placeUpdateSubmitHandler = async (event) => {
     event.preventDefault();
-    console.log(formState.inputs);
+
+    try {
+      await sendRequest(
+        `${process.env.REACT_APP_API_URL}/places/${placeId}`,
+        "PATCH",
+        JSON.stringify({
+          title: formState.inputs.title.value,
+          description: formState.inputs.description.value,
+        }),
+        { "Content-Type": "application/json" }
+      );
+      history.push(`/${auth.userId}/places`);
+    } catch (err) {}
   };
 
-  if (!identifiedPlace) {
+  if (isLoading) {
+    return (
+      <div className='center'>
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (!loadedPlace && !error) {
     return (
       <div className='center'>
         <Card>
@@ -102,43 +105,38 @@ const UpdatePlace = (props) => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className='center'>
-        <Card>
-          <h2>Carregando...</h2>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <form className='place-form' onSubmit={placeUpdateSubmitHandler}>
-      <Input
-        id='title'
-        element='input'
-        type='text'
-        label='Titulo'
-        validators={[VALIDATOR_REQUIRE()]}
-        errorText={MESSAGE_VALIDTITLE}
-        onInput={inputHandler}
-        initialValue={formState.inputs.title.value}
-        initialValid={formState.inputs.title.isValid}
-      />
-      <Input
-        id='description'
-        element='textarea'
-        label='Descrição'
-        validators={[VALIDATOR_MINLENGTH(5)]}
-        errorText={MESSAGE_MINDESCRIPTION}
-        onInput={inputHandler}
-        initialValue={formState.inputs.description.value}
-        initialValid={formState.inputs.description.isValid}
-      />
-      <Button type='submit' disabled={!formState.isValid}>
-        Atualizar Lugar
-      </Button>
-    </form>
+    <>
+      <ErrorModal error={error} onClear={clearError} />
+      {!isLoading && loadedPlace && (
+        <form className='place-form' onSubmit={placeUpdateSubmitHandler}>
+          <Input
+            id='title'
+            element='input'
+            type='text'
+            label='Titulo'
+            validators={[VALIDATOR_REQUIRE()]}
+            errorText={MESSAGE_VALIDTITLE}
+            onInput={inputHandler}
+            initialValue={loadedPlace.title}
+            initialValid={true}
+          />
+          <Input
+            id='description'
+            element='textarea'
+            label='Descrição'
+            validators={[VALIDATOR_MINLENGTH(5)]}
+            errorText={MESSAGE_MINDESCRIPTION}
+            onInput={inputHandler}
+            initialValue={loadedPlace.description}
+            initialValid={true}
+          />
+          <Button type='submit' disabled={!formState.isValid}>
+            Atualizar Lugar
+          </Button>
+        </form>
+      )}
+    </>
   );
 };
 
