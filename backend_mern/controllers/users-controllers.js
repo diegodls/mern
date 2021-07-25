@@ -17,7 +17,6 @@ const getUsers = async (req, res, next) => {
 };
 
 const signup = async (req, res, next) => {
-  console.log("Cadastro");
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -50,7 +49,7 @@ const signup = async (req, res, next) => {
     name,
     email,
     password,
-    image: "https://live.staticflickr.com/5748/30564172665_345907b287_b.jpg",
+    image: req.file.path,
     places: [],
   });
 
@@ -69,7 +68,6 @@ const signup = async (req, res, next) => {
 };
 
 const login = async (req, res, next) => {
-  console.log("Logando");
   const { email, password } = req.body;
 
   let existingUser;

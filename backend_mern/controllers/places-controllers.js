@@ -1,3 +1,4 @@
+const fs = require("fs");
 const mongoose = require("mongoose");
 const { validationResult } = require("express-validator");
 
@@ -55,7 +56,9 @@ const getPlacesByUserId = async (req, res, next) => {
   }
 
   res.json({
-    places: userWithPlaces.places.map((place) => place.toObject({ getters: true })),
+    places: userWithPlaces.places.map((place) =>
+      place.toObject({ getters: true })
+    ),
   });
 };
 
@@ -83,8 +86,7 @@ const createPlaces = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image:
-      "https://s1.static.brasilescola.uol.com.br/be/conteudo/images/big-ben.jpg",
+    image: req.file.path,
     creator,
   });
 
@@ -176,9 +178,10 @@ const deletePlace = async (req, res, next) => {
       "Não foi possível encontrar o lugar com o ID solicitado",
       404
     );
-
     return next(error);
   }
+
+  const imagePath = place.image;
 
   try {
     const sess = await mongoose.startSession();
@@ -191,6 +194,10 @@ const deletePlace = async (req, res, next) => {
     error = new HttpError("Não foi possível deletar o Lugar solicitado", 500);
     return next(error);
   }
+
+  fs.unlink(imagePath, (err) => {
+    console.log(err);
+  });
 
   res.status(200).json({ message: "Deletado com sucesso" });
 };
