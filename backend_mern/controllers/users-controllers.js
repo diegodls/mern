@@ -1,4 +1,6 @@
 const { validationResult } = require("express-validator");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const HttpError = require("../models/http-error");
 const User = require("../models/user");
@@ -45,10 +47,22 @@ const signup = async (req, res, next) => {
     return next(error);
   }
 
+  let hashedPassword;
+
+  try {
+    hashedPassword = await bcrypt.hash(password, 12);
+  } catch (err) {
+    const error = new HttpError(
+      "Não foi possível criar o usuário, tente novamente mais tarde!",
+      500
+    );
+    return next(error);
+  }
+
   const createdUser = new User({
     name,
     email,
-    password,
+    password: hashedPassword,
     image: req.file.path,
     places: [],
   });
@@ -57,14 +71,30 @@ const signup = async (req, res, next) => {
     await createdUser.save();
   } catch (err) {
     error = new HttpError(
-      "Não foi possível criar o Usuário, tente novamente mais tarde",
+      "Não foi possível criar o usuário, tente novamente mais tarde",
       500
     );
-
     return next(error);
   }
 
-  res.status(201).json({ user: createdUser.toObject({ getters: true }) });
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: createdUser.id, email: createdUser.email },
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    error = new HttpError(
+      "Não foi possível criar o usuário, tente novamente mais tarde",
+      500
+    );
+    return next(error);
+  }
+
+  res
+    .status(201)
+    .json({ userId: createdUser.id, email: createdUser.email, token: token });
 };
 
 const login = async (req, res, next) => {
@@ -74,7 +104,6 @@ const login = async (req, res, next) => {
 
   try {
     existingUser = await User.findOne({ email: email });
-    console.log(existingUser);
   } catch (err) {
     error = new HttpError(
       "Campos inválidos fornecidos, por favor corrija-os!",
@@ -83,16 +112,53 @@ const login = async (req, res, next) => {
     return next(error);
   }
 
-  if (!existingUser || existingUser.password !== password) {
+  if (!existingUser) {
     error = new HttpError(
       "Não foi possível efetuar o login, credenciais invalidas!",
-      401
+      403
     );
     return next(error);
   }
+
+  let isValidPassword = false;
+
+  try {
+    isValidPassword = await bcrypt.compare(password, existingUser.password);
+  } catch (err) {
+    const error = new HttpError(
+      "Não foi possível logar, verifique suas credenciais e tente novamente mais tarde!",
+      500
+    );
+    return next(error);
+  }
+
+  if (!isValidPassword) {
+    error = new HttpError(
+      "Não foi possível efetuar o login, credenciais invalidas!",
+      403
+    );
+    return next(error);
+  }
+
+  let token;
+  try {
+    token = jwt.sign(
+      { userId: existingUser.id, email: existingUser.email},
+      process.env.JWT_PRIVATE_KEY,
+      { expiresIn: "1h" }
+    );
+  } catch (err) {
+    error = new HttpError(
+      "Não foi possível logar, tente novamente mais tarde",
+      500
+    );
+    return next(error);
+  }
+
   res.json({
-    message: "Logado com sucesso",
-    user: existingUser.toObject({ getters: true }),
+    userId: existingUser.id,
+    email: existingUser.email,
+    token: token,
   });
 };
 

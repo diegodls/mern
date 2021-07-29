@@ -143,8 +143,12 @@ const updatePlace = async (req, res, next) => {
   try {
     place = await Place.findById(placeId);
   } catch (err) {
-    const error = new HttpError("Não foi possível atualizar o Lugar,", 500);
+    const error = new HttpError("Não foi possível atualizar o Lugar!", 500);
+    return next(error);
+  }
 
+  if (place.creator.toString() !== req.userData.userId) {
+    const error = new HttpError("Você não pode atualizar este lugar!", 401);
     return next(error);
   }
 
@@ -178,6 +182,11 @@ const deletePlace = async (req, res, next) => {
       "Não foi possível encontrar o lugar com o ID solicitado",
       404
     );
+    return next(error);
+  }
+
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError("Você não pode deletar este lugar!", 403);
     return next(error);
   }
 
