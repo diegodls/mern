@@ -1,12 +1,12 @@
 import React from "react";
 import "./PlaceList.css";
 
-import Button from '../../shared/components/FormElements/Button'
+import Button from "../../shared/components/FormElements/Button";
 import Card from "../../shared/components/UIElements/Card";
 import PlaceItem from "./PlaceItem";
 
 const PlaceList = (props) => {
-  if (props.items.length === 0) {
+  if (props.items.length === 0 || !props.items) {
     return (
       <div className='place-list center'>
         <Card>
