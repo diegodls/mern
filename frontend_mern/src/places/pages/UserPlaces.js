@@ -10,7 +10,7 @@ import { useHttpClient } from "../../shared/hooks/http-hook";
 const UsersPlaces = (props) => {
   const { isLoading, error, sendRequest, clearError } = useHttpClient();
 
-  const [loadedPlaces, setLoadedPlaces] = useState();
+  const [loadedPlaces, setLoadedPlaces] = useState([]);
 
   const userId = useParams().userId;
 
@@ -35,7 +35,7 @@ const UsersPlaces = (props) => {
 
   return (
     <>
-      <ErrorModal error={error} onCLear={clearError} />
+      <ErrorModal error={error} onClear={clearError} />
       {isLoading && (
         <div className='center'>
           <LoadingSpinner asOverlay />
