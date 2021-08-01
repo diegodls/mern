@@ -1,0 +1,9 @@
+{
+  "env": {
+    "MONGO_USER": "",
+    "MONGO_PASSWORD": "",
+    "MONGO_URL": ""
+  }
+} 
+//No curso foi usado este arquivo/método, mas optei por usar o .env
+//Remover o underline (_) do nome deste arquivo e o .env para usar este método.
