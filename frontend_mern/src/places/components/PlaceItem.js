@@ -65,6 +65,7 @@ const PlaceItem = (props) => {
         footerClass='place-item__modal-actions'
         footer={""}
       >
+        <p>Deseja realmente deletar? Esta ação não pode ser desfeita</p>
         <React.Fragment>
           <Button inverse onClick={showDeleteWarningHandler}>
             CANCELAR
@@ -73,7 +74,6 @@ const PlaceItem = (props) => {
             DELETAR
           </Button>
         </React.Fragment>
-        <p>Deseja realmente deletar? Esta ação não pode ser desfeita</p>
       </Modal>
       <li className='place-item'>
         <Card className='user-item__content'>
