@@ -219,6 +219,5 @@ exports.deletePlace = deletePlace;
 
 /*
 Para funcionar, deverão ser criado as collections "places" e "users" no MongoDB, as funções/transactions não criam!
-
 O ".populate" só funciona se houver relação entre as entidades (ref="XXXX"), nesse caso, nos "models" de usuário e lugar 
 */
